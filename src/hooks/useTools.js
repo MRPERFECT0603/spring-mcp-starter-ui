@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { mcpApi } from "../services/api";
+import mcpApi from "../services/api";
 
 export const useTools = () => {
   const [tools, setTools] = useState([]);

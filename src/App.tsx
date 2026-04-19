@@ -1,19 +1,38 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/layout/Layout";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import ToolsPage from "./pages/ToolsPage";
-import ToolExecutionPage from "./pages/ToolExecutionPage";
+import Login from "./pages/Login";
+import Layout from "./components/layout/Layout";
+import { getEndpoint } from "./utils/session";
+
+function PrivateRoute({ children }) {
+  const endpoint = getEndpoint();
+  return endpoint ? children : <Navigate to="/login" />;
+}
 
 function App() {
   return (
     <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/tools" element={<ToolsPage />} />
-          <Route path="/execute" element={<ToolExecutionPage />} />
-        </Routes>
-      </Layout>
+      <Routes>
+
+        {/* LOGIN */}
+        <Route path="/login" element={<Login />} />
+
+        {/* PROTECTED ROUTES WITH LAYOUT */}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Layout />   {/* 👈 THIS WAS MISSING */}
+            </PrivateRoute>
+          }
+        >
+          {/* Nested routes */}
+          <Route index element={<Dashboard />} />
+          <Route path="tools" element={<ToolsPage />} />
+        </Route>
+
+      </Routes>
     </BrowserRouter>
   );
 }
