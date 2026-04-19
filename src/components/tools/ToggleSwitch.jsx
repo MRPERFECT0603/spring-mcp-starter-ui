@@ -1,0 +1,18 @@
+function ToggleSwitch({ enabled, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`w-12 h-6 flex items-center rounded-full p-1 transition
+        ${enabled ? "bg-green-500" : "bg-gray-300"}
+      `}
+    >
+      <div
+        className={`bg-white w-4 h-4 rounded-full shadow transform transition
+          ${enabled ? "translate-x-6" : "translate-x-0"}
+        `}
+      />
+    </button>
+  );
+}
+
+export default ToggleSwitch;
