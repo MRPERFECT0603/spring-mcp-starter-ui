@@ -7,18 +7,18 @@ function Layout({ children }) {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      
+
       <Sidebar collapsed={collapsed} />
 
       <div className="flex-1 flex flex-col">
-        <Header 
-          collapsed={collapsed} 
-          setCollapsed={setCollapsed} 
+        <Header
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
         />
 
-        <main className="p-8 bg-gray-50 min-h-screen overflow-y-auto">
-  {children}
-</main>
+        <main className="flex-1 p-8 bg-gray-50 overflow-y-auto">
+          {children}
+        </main>
       </div>
     </div>
   );
