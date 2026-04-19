@@ -1,34 +1,71 @@
-// MCP JSON-RPC API Client
+// MCP JSON-RPC API Client (Streaming HTTP Support)
 const MCP_ENDPOINT = "http://localhost:8001/mcp";
 
 let requestId = 1;
 
-// Make JSON-RPC request
+// Make JSON-RPC request with streaming support
 const mcpRequest = async (method, params = {}) => {
-  const response = await fetch(MCP_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: requestId++,
-      method,
-      params,
-    }),
-  });
+  try {
+    const response = await fetch(MCP_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: requestId++,
+        method,
+        params,
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+
+    // Handle streaming response (SSE or NDJSON)
+    if (contentType?.includes("text/event-stream") || contentType?.includes("stream")) {
+      const text = await response.text();
+
+      // Parse newline-delimited JSON or SSE format
+      const lines = text.trim().split('\n');
+      for (const line of lines) {
+        if (!line.trim() || line.startsWith(':')) continue;
+
+        // Remove SSE "data: " prefix if present
+        const jsonStr = line.startsWith('data: ') ? line.substring(6) : line;
+
+        try {
+          const data = JSON.parse(jsonStr);
+          if (data.error) {
+            throw new Error(data.error.message || "JSON-RPC error");
+          }
+          if (data.result !== undefined) {
+            return data.result;
+          }
+        } catch (e) {
+          console.warn("Failed to parse line:", line, e);
+        }
+      }
+
+      throw new Error("No valid result in streaming response");
+    }
+
+    // Handle regular JSON response
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error.message || "JSON-RPC error");
+    }
+
+    return data.result;
+  } catch (error) {
+    console.error("MCP Request failed:", error);
+    throw error;
   }
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.error.message || "JSON-RPC error");
-  }
-
-  return data.result;
 };
 
 // MCP Tool Management APIs

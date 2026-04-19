@@ -11,12 +11,25 @@ export const useTools = () => {
     try {
       setLoading(true);
       setError(null);
+
+      console.log("Fetching tools from MCP backend...");
       const toolsList = await mcpApi.listTools();
+      console.log("Tools fetched successfully:", toolsList);
+
       setTools(toolsList);
     } catch (err) {
       console.error("Failed to fetch tools:", err);
-      setError(err.message);
-      // Fallback to empty array if backend is not available
+      const errorMsg = err.message || "Unknown error";
+
+      // Provide helpful error messages
+      if (errorMsg.includes("Failed to fetch") || errorMsg.includes("NetworkError")) {
+        setError("Cannot connect to MCP server. Is it running on http://localhost:8001?");
+      } else if (errorMsg.includes("CORS")) {
+        setError("CORS error - Backend needs to allow requests from this origin");
+      } else {
+        setError(errorMsg);
+      }
+
       setTools([]);
     } finally {
       setLoading(false);
